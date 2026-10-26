@@ -20,7 +20,7 @@ const art = place => {
  return `<div class="destination-cover ${size}"><span class="destination-label" aria-hidden="true">YOUR NEXT DESTINATION</span><strong class="destination-name">${escapeHTML(text)}</strong><span class="destination-footer" aria-hidden="true"><span>BLUEWAY JOURNEY</span><span>↗</span></span></div>`;
 };
 function renderList(){
- const sorted=[...trips].sort((a,b)=>a.startDate.localeCompareb.startDate);
+ const sorted=[...trips].sort((a,b)=>a.startDate.localeCompare(b.startDate));
  const today=new Date();const todayKey=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
  const nearest=sorted.find(t=>t.startDate>=todayKey);
  const nearestDate=nearest ? nearest.startDate.split('-') : null;

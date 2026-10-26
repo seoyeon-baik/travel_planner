@@ -91,6 +91,7 @@ function createApp(options = {}) {
   app.use(async (req,res) => res.status(404).send('페이지를 찾을 수 없어요.'));
   app.use((error,req,res,next) => {
     const status = error.status || 500;
+    if(status===500)console.error('API_ERROR',JSON.stringify({method:req.method,path:req.path,code:error.code || 'UNKNOWN',routine:error.routine || null}));
     res.status(status).json({ error: status === 500 ? '서버 오류가 발생했어요.' : error.type === 'entity.parse.failed' ? 'JSON 형식을 확인해 주세요.' : error.message });
   });
   return app;

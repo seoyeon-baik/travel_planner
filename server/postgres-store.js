@@ -52,7 +52,14 @@ function createPostgresStore(connectionString) {
   const store = {
     ready, get,
     ping: async () => {await ready; await pool.query('SELECT 1');},
-    all: async () => { await ready; const {rows}=await pool.query(`SELECT id FROM ${schema}.trips ORDER BY body->>'startDate',id`); return Promise.all(rows.map(r=>get(r.id))); },
+    all: async () => {
+      await ready;
+      const {rows}=await pool.query(`SELECT t.body,
+        COALESCE((SELECT jsonb_agg(s.body ORDER BY s.position) FROM ${schema}.schedules s WHERE s.trip_id=t.id),'[]'::jsonb) AS schedules,
+        COALESCE((SELECT jsonb_agg(e.body ORDER BY e.position) FROM ${schema}.expenses e WHERE e.trip_id=t.id),'[]'::jsonb) AS expenses
+        FROM ${schema}.trips t ORDER BY t.body->>'startDate',t.id`);
+      return rows.map(row=>({...row.body,schedules:row.schedules,extraExpenses:row.expenses}));
+    },
     save: trip => transaction(client=>write(client,trip)),
     delete: async id => {await ready;return pool.query(`DELETE FROM ${schema}.trips WHERE id=$1`,[id]);},
     close: () => pool.end()

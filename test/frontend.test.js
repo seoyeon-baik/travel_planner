@@ -3,9 +3,13 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
-const {createApp}=require('../server/app');
+const {createApp,normalize}=require('../server/app');
 test('frontend loads and saves via fetch without localStorage',async t=>{
- const server=createApp({store:createTestStore()}).listen(0,'127.0.0.1');
+ const store=createTestStore();
+ for(const [id,startDate] of [['trip-later','2026-12-01'],['trip-earlier','2026-11-01']]){
+  await store.save(normalize({name:id,place:'서울',startDate,endDate:startDate,budget:10000},id));
+ }
+ const server=createApp({store}).listen(0,'127.0.0.1');
  await new Promise((resolve,reject)=>{server.once('listening',resolve);server.once('error',reject)});
  t.after(()=>new Promise(resolve=>{server.close(resolve);server.closeAllConnections()}));
  const base='http://127.0.0.1:'+server.address().port;
@@ -15,6 +19,8 @@ test('frontend loads and saves via fetch without localStorage',async t=>{
  vm.createContext(context);vm.runInContext(fs.readFileSync(require.resolve('../js/app.js'),'utf8'),context);
  await vm.runInContext('loadTrips()',context);
  assert(get('#app').innerHTML.includes('나의 여행'));
+ assert(get('#app').innerHTML.includes('class="count">2'));
+ assert(get('#app').innerHTML.indexOf('href="#trip/trip-earlier"')<get('#app').innerHTML.indexOf('href="#trip/trip-later"'));
  assert(!get('#app').innerHTML.includes('data-import-storage'));
  await vm.runInContext(`(async()=>{const trip=prepareTrip({id:'trip-test-ui',name:'API 연결 여행',place:'서울',startDate:'2026-11-01',endDate:'2026-11-01',budget:10000});trip.extraExpenses=[];await persistTrips([...trips,trip]);trips.push(trip);renderList();})()`,context);
  assert(get('#app').innerHTML.includes('API 연결 여행'));
