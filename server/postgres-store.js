@@ -5,7 +5,7 @@ function createPostgresStore(connectionString) {
   if(url.hostname.endsWith('.neon.tech')) url.searchParams.set('sslmode','verify-full');
   const pool = new Pool({ connectionString: url.toString(), max: 3, idleTimeoutMillis: 10000, connectionTimeoutMillis: 15000, enableChannelBinding: true });
   pool.on('error', () => console.error('PostgreSQL 연결이 종료되었습니다. 다음 요청에서 재연결합니다.'));
-  const ready = (async () => {
+  async function initialize() {
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
@@ -21,18 +21,21 @@ function createPostgresStore(connectionString) {
       await client.query('COMMIT');
     } catch(error) { await client.query('ROLLBACK'); throw error; }
     finally { client.release(); }
-  })();
-  // Keep rejected initialization handled until the first request awaits it.
-  ready.catch(() => {});
+  }
+  let initialization;
+  function ensureReady() {
+    if (!initialization) initialization=initialize().catch(error=>{initialization=undefined;throw error;});
+    return initialization;
+  }
   async function transaction(fn) {
-    await ready;
+    await ensureReady();
     const client = await pool.connect();
     try { await client.query('BEGIN'); const result = await fn(client); await client.query('COMMIT'); return result; }
     catch(error) { await client.query('ROLLBACK'); throw error; }
     finally { client.release(); }
   }
   async function get(id, client = pool) {
-    await ready;
+    await ensureReady();
     const {rows} = await client.query(`SELECT t.body,
       COALESCE((SELECT jsonb_agg(s.body ORDER BY s.position) FROM ${schema}.schedules s WHERE s.trip_id=t.id),'[]'::jsonb) AS schedules,
       COALESCE((SELECT jsonb_agg(e.body ORDER BY e.position) FROM ${schema}.expenses e WHERE e.trip_id=t.id),'[]'::jsonb) AS expenses
@@ -50,10 +53,10 @@ function createPostgresStore(connectionString) {
     }
   }
   const store = {
-    ready, get,
-    ping: async () => {await ready; await pool.query('SELECT 1');},
+    get ready() {return ensureReady();}, get,
+    ping: async () => {await ensureReady(); await pool.query('SELECT 1');},
     all: async () => {
-      await ready;
+      await ensureReady();
       const {rows}=await pool.query(`SELECT t.body,
         COALESCE((SELECT jsonb_agg(s.body ORDER BY s.position) FROM ${schema}.schedules s WHERE s.trip_id=t.id),'[]'::jsonb) AS schedules,
         COALESCE((SELECT jsonb_agg(e.body ORDER BY e.position) FROM ${schema}.expenses e WHERE e.trip_id=t.id),'[]'::jsonb) AS expenses
@@ -61,7 +64,7 @@ function createPostgresStore(connectionString) {
       return rows.map(row=>({...row.body,schedules:row.schedules,extraExpenses:row.expenses}));
     },
     save: trip => transaction(client=>write(client,trip)),
-    delete: async id => {await ready;return pool.query(`DELETE FROM ${schema}.trips WHERE id=$1`,[id]);},
+    delete: async id => {await ensureReady();return pool.query(`DELETE FROM ${schema}.trips WHERE id=$1`,[id]);},
     close: () => pool.end()
   };
   return store;
