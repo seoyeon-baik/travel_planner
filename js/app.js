@@ -39,6 +39,9 @@ function refreshTrip(t){
 async function api(path,options={}){
  const response=await fetch('/api'+path,{...options,headers:{'Content-Type':'application/json',...options.headers}});
  if(response.status===204)return null;
+ if(!response.headers.get('content-type')?.includes('application/json')){
+  throw new Error(`API가 JSON 응답을 반환하지 않았어요 (HTTP ${response.status}). Vercel의 Express 설정과 배포 접근 권한을 확인해 주세요.`);
+ }
  const data=await response.json();
  if(!response.ok)throw new Error(data.error || '서버 요청에 실패했어요.');
  return data;
@@ -62,7 +65,11 @@ let loading=true;
 async function loadTrips(){
  app.innerHTML='<div class="empty-state"><h4>여행을 불러오는 중이에요…</h4></div>';
  try{const data=await api('/trips');trips.splice(0,trips.length,...data);loading=false;route();}
- catch{app.innerHTML='<div class="empty-state"><h4>서버에 연결하지 못했어요</h4><p>npm start로 서버를 실행하고 http://localhost:3000에서 접속해 주세요.</p><button class="button primary" data-retry>다시 시도</button></div>';}
+ catch(error){
+ const local=location.hostname==='localhost'||location.hostname==='127.0.0.1'||location.protocol==='file:';
+ const guidance=local?'로컬 서버 실행 상태를 확인해 주세요.':'배포 서버의 DATABASE_URL 설정과 Vercel 실행 로그를 확인해 주세요.';
+ app.innerHTML=`<div class="empty-state"><h4>여행을 불러오지 못했어요</h4><p>${escapeHTML(guidance)}</p><p>${escapeHTML(error.message)}</p><button class="button primary" data-retry>다시 시도</button></div>`;
+ }
 }
 
 function currentTrip(){return trips.find(t=>t.id===location.hash.split('/')[1])}
