@@ -1,0 +1,19 @@
+{
+  "name": "blueway-travel-planner",
+  "version": "1.0.0",
+  "private": true,
+  "description": "여행 일정 및 예산 관리 앱",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "test": "node --test",
+    "build": "node scripts/build.js"
+  },
+  "engines": {
+    "node": "24.x"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "pg": "^8.23.1"
+  }
+}

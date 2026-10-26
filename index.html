@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#2375e9"><title>Blueway — 여행의 모든 순간</title><link rel="stylesheet" href="css/style.css?v=20261027-neon-only"><script src="js/app.js?v=20261027-neon-only" defer></script></head>
+<body>
+<header class="header"><a class="brand" href="#" aria-label="Blueway 홈"><span class="brand-icon">✈</span>blueway<span class="brand-dot">.</span></a><nav aria-label="주 메뉴"><a class="nav-active" href="#">나의 여행</a><span class="nav-note">여행의 시작부터, 마지막 순간까지</span></nav><div class="profile"><span>서연님의 여행 공간</span><div class="avatar">S</div></div></header>
+<main id="app"></main>
+<footer><a class="brand footer-brand" href="#">blueway.</a><span>계획은 가볍게, 여행은 자유롭게.</span><span class="demo-label">BLUEWAY · 여행 플래너</span></footer>
+<dialog id="create-trip-dialog" aria-labelledby="create-trip-title">
+<button type="button" class="icon-button create-close" aria-label="닫기">×</button>
+<span class="eyebrow">A NEW ADVENTURE</span><h2 id="create-trip-title">새 여행 만들기</h2><p>설레는 여행의 첫 페이지를 채워보세요.</p>
+<form id="create-trip-form">
+<label for="trip-name">여행명 <span>*</span></label><input id="trip-name" name="name" placeholder="예: 바다를 따라 떠나는 여름 여행" required maxlength="100" autocomplete="off">
+<label for="trip-place">여행지 <span>*</span></label><input id="trip-place" name="place" placeholder="예: 대한민국 · 강릉" required maxlength="100" autocomplete="off">
+<div class="form-dates"><div><label for="trip-start">시작일 <span>*</span></label><input id="trip-start" name="startDate" type="date" required></div><div><label for="trip-end">종료일 <span>*</span></label><input id="trip-end" name="endDate" type="date" required></div></div>
+<label for="trip-budget">총예산</label><div class="budget-input"><input id="trip-budget" name="budget" type="number" min="0" step="1" max="9007199254740991" placeholder="0" inputmode="numeric"><span>원</span></div><small class="form-hint">입력하지 않으면 0원으로 저장돼요. 당일치기 여행도 가능해요.</small>
+<p id="create-error" role="alert"></p><div class="form-actions trip-form-actions"><button type="button" id="delete-trip" class="button delete-trip-button" hidden>여행 삭제</button><button type="button" class="button secondary create-close">취소</button><button type="submit" class="button primary">여행 만들기</button></div>
+</form></dialog>
+<dialog id="schedule-dialog" aria-labelledby="schedule-title"><button type="button" class="icon-button schedule-close" aria-label="닫기">×</button><span class="eyebrow">PLAN YOUR DAY</span><h2 id="schedule-title">일정 추가</h2><p>여행의 소중한 순간을 계획해 보세요.</p>
+<form id="schedule-form"><div class="form-dates"><div><label for="schedule-date">날짜 *</label><input id="schedule-date" name="date" type="date" required></div><div><label id="schedule-time-label" for="schedule-hour">시작 시간 *</label><div class="period-buttons" role="group" aria-label="오전 또는 오후"><button type="button" data-period="AM" aria-pressed="true">오전 AM</button><button type="button" data-period="PM" aria-pressed="false">오후 PM</button></div><div class="time-inputs"><input id="schedule-hour" name="hour" type="text" inputmode="numeric" maxlength="2" pattern="(0?[1-9]|1[0-2])" placeholder="시" aria-label="시 (1부터 12)" required><span>:</span><input id="schedule-minute" name="minute" type="text" inputmode="numeric" maxlength="2" pattern="[0-5]?[0-9]" placeholder="분" aria-label="분 (0부터 59)" value="00" required></div></div></div>
+<label for="schedule-name">활동명 *</label><input id="schedule-name" name="name" maxlength="100" required placeholder="예: 바다 앞 카페에서 쉬어가기">
+<label for="schedule-place">장소</label><input id="schedule-place" name="place" maxlength="200" placeholder="장소 또는 주소">
+<label for="schedule-memo">메모</label><textarea id="schedule-memo" name="memo" rows="3" maxlength="1000" placeholder="예약 정보나 챙길 물건을 적어보세요"></textarea>
+<div class="form-dates"><div><label for="schedule-category">비용 카테고리</label><select id="schedule-category" name="category"><option>숙박</option><option>교통</option><option>식비</option><option>쇼핑</option><option>관광</option><option selected>기타</option></select></div><div><label for="schedule-cost">예상 비용 (원)</label><input id="schedule-cost" name="cost" type="number" min="0" step="1" max="9007199254740991" placeholder="0"></div></div>
+<small class="form-hint">비용을 입력하지 않으면 0원으로 저장돼요.</small><p id="schedule-error" role="alert"></p><div class="form-actions trip-form-actions"><button type="button" id="delete-schedule" class="button delete-trip-button" hidden>삭제</button><button class="button secondary schedule-close" type="button">취소</button><button class="button primary" type="submit">저장하기</button></div></form></dialog>
+<dialog id="expense-dialog" aria-labelledby="expense-title"><button type="button" class="icon-button expense-close" aria-label="닫기">×</button><span class="eyebrow">PLAN YOUR BUDGET</span><h2 id="expense-title">별도 비용 추가</h2><p>항공권, 여행자보험 등 일정 밖의 비용을 기록하세요.</p><form id="expense-form">
+<label for="expense-name">비용 항목명 *</label><input id="expense-name" name="name" required maxlength="100" placeholder="예: 여행자보험" autocomplete="off">
+<label for="expense-category">카테고리 *</label><select id="expense-category" name="category" required><option>숙박</option><option>교통</option><option>식비</option><option>쇼핑</option><option>관광</option><option selected>기타</option></select>
+<label for="expense-cost">예상 비용 (원)</label><input id="expense-cost" name="cost" type="number" min="0" step="1" max="9007199254740991" placeholder="0" inputmode="numeric"><small class="form-hint">입력하지 않으면 0원으로 저장돼요.</small>
+<p id="expense-error" role="alert"></p><div class="form-actions trip-form-actions"><button type="button" id="delete-expense" class="button delete-trip-button" hidden>삭제</button><button type="button" class="button secondary expense-close">취소</button><button type="submit" class="button primary">비용 추가하기</button></div></form></dialog>
+<div id="toast" role="status"></div>
+</body></html>
